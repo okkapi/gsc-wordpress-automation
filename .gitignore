@@ -1,0 +1,21 @@
+# 認証情報 — 絶対にコミットしない
+.env
+*.env
+!.env.example
+oauth_client.json
+gsc_token.json
+gsc_token.json.*
+google-indexing-key.json
+*credentials*.json
+
+# 実行時に生成されるもの
+*.log
+gsc_reports/
+topic_candidates.txt
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS
+.DS_Store
