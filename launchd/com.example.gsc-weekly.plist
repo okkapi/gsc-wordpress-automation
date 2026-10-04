@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  週次レポートを macOS の launchd で定期実行するための設定。
+
+  当初 cron で運用していたが、月曜 8:00 に Mac がスリープしていると
+  実行時刻が破棄され、かつ出力も残らないため停止に気づけなかった。
+  （実際に 7 週間停止していたことに後から気づいた）
+
+  launchd の StartCalendarInterval は、指定時刻にスリープしていた場合
+  次回起動時に 1 回だけ補完実行する。あわせてログ出力先を明示し、
+  失敗が必ずファイルに残るようにしている。
+
+  設置方法:
+    1. /path/to/... を実際のパスに書き換える
+    2. cp com.example.gsc-weekly.plist ~/Library/LaunchAgents/
+    3. plutil -lint ~/Library/LaunchAgents/com.example.gsc-weekly.plist
+    4. launchctl load ~/Library/LaunchAgents/com.example.gsc-weekly.plist
+    5. launchctl start com.example.gsc-weekly   # 動作確認用の即時実行
+
+  解除:
+    launchctl unload ~/Library/LaunchAgents/com.example.gsc-weekly.plist
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.example.gsc-weekly</string>
+
+    <!-- plist 内では ~ が展開されないため絶対パスで指定する -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/path/to/gsc-wordpress-automation/src/gsc_weekly_report.sh</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/path/to/gsc-wordpress-automation</string>
+
+    <!-- 毎週月曜 8:00 -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>1</integer>
+        <key>Hour</key>
+        <integer>8</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <!-- 失敗を検知できるようにログを必ず残す -->
+    <key>StandardOutPath</key>
+    <string>/path/to/gsc-wordpress-automation/launchd_gsc.log</string>
+    <key>StandardErrorPath</key>
+    <string>/path/to/gsc-wordpress-automation/launchd_gsc_error.log</string>
+
+    <!-- cron と同様、対話シェルの環境は引き継がれないため明示する -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>LANG</key>
+        <string>ja_JP.UTF-8</string>
+        <key>GSC_HOME</key>
+        <string>/path/to/gsc-wordpress-automation</string>
+    </dict>
+
+    <!-- ログイン時の自動実行はしない（予約時刻のみ） -->
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>
